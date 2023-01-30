@@ -5,6 +5,9 @@ import json
 import time
 from streamlit_cookies_manager import EncryptedCookieManager
 import os
+from back.NLP import answer
+from back.doc.documentation import documentation
+from tchat import tchat
 
 # This should be on top of your script
 cookies = EncryptedCookieManager(
@@ -19,9 +22,6 @@ try :
 except:
     cookies['historical'] = "[]"
     historical = []
-
-def answer(text):
-    return "yes i am bob"
 
 st.title('tchatbot')
 
@@ -42,50 +42,16 @@ with tab1:
     historical.reverse()
 
     with container:
-        for i in range(len(historical)):
-            if historical[i]["user"]==0:
-                col1, col2,col3, col4 = st.columns([3,20,20,3])
-                if i == 0:
-                    placeholder = st.empty()
-                    with placeholder:
-                        for seconds in range(1):
-                            st.write(f"⏳")
-                            time.sleep(1)
-                    placeholder.empty()
-                    col1.image("fille.png")
-                    col2.success(historical[i]['text'])
-                else:
-                    col1.image("fille.png")
-                    col2.warning(historical[i]['text'])
-
-            else:
-
-                col1, col2,col3, col4 = st.columns([3,20,20,3])
-                col3.info(historical[i]["text"])
-                col4.image("homme.png")
-
+        tchat(historical)
 
     historical.reverse()
     cookies['historical'] = str(historical)
     cookies.save()
-   
-
 
 with tab2:
     st.header('documentation')
     recherche = st.text_input(value="", label="recherche")
-    with st.expander("information sur les personnes politiques"):
-        st.subheader("le parcours d'une personne politique")
-        st.write('doc1')
-        st.subheader("sa participation a certain débat")
-        st.write('doc1')
-
-
-    with st.expander("information sur les séances parlementaires"):
-        st.subheader("des information en fonction d'une période bien précise")
-        st.write('doc1')
-        st.subheader("aprofondir certain sujet")
-        st.write('doc1')
+    documentation()
 
 
 
