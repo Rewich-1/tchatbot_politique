@@ -73,6 +73,7 @@ with tab2:
 
     with st.expander("doc2"):
         st.write('doc2')
+        st.write('doc3')
 
 
 
