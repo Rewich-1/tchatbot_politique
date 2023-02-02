@@ -39,33 +39,34 @@ tab1, tab2 = st.tabs(["tchat", "tuto"])
 with tab1:
     st.header('tchat')
 
-    st.write('<style>[data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] {max-height: 400px;overflow: auto;flex-direction:column-reverse;} </style>', unsafe_allow_html=True)
+    st.write('<style>[data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] {max-height: 600px;overflow: auto;flex-direction:column-reverse;} </style>', unsafe_allow_html=True)
     container = st.container()
 
     question = st.text_input(value="",label="Speak")
 
-    if st.button('cut the cookies 🍪' ):
+    if st.button('manger les cookies 🍪' ):
+        question = ""
         cookies['historical'] = "[]"
         cookies.save()
         historical = []
     else:
         pass
 
-
     if question != "":
 
         historical.append({"user":1,"text":question})
-        historical.append({"user": 0, "text": answer(question)})
+        historical.append({"user": 0, "text": answer(question,answer=True)})
 
-    historical.reverse()
+        historical.reverse()
 
-    with container:
-        tchat(historical)
+        with container:
+            tchat(historical)
 
-    historical.reverse()
+        st.write(answer(question,answer=False))
+        historical.reverse()
 
-    cookies['historical'] = str(historical).replace("'", '"')
-    cookies.save()
+        cookies['historical'] = str(historical).replace("'", '"')
+        cookies.save()
 
 
 with tab2:
