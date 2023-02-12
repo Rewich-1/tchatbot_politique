@@ -21,7 +21,7 @@ cookies = EncryptedCookieManager(
 if not cookies.ready():
     st.stop()
 
-historical = json.loads(cookies['historical'])
+
 
 try :
     historical = json.loads(cookies['historical'])
