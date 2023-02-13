@@ -21,8 +21,6 @@ cookies = EncryptedCookieManager(
 if not cookies.ready():
     st.stop()
 
-
-
 try :
     historical = json.loads(cookies['historical'])
     st.write('cookies Find !')
@@ -31,6 +29,8 @@ except:
     st.write('cookies NOT find !')
     #cookies['historical'] = "[]"
     historical = []
+
+
 
 st.title('tchatbot')
 
