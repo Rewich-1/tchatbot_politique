@@ -12,13 +12,13 @@ def tchat(historical):
                         st.write(f"⏳")
                         time.sleep(1)
                 placeholder.empty()
-                col1.image("fille.png")
+                col1.image("img/fille.png")
                 col2.success(historical[i]['text'])
             else:
-                col1.image("fille.png")
+                col1.image("img/fille.png")
                 col2.warning(historical[i]['text'])
 
         else:
             col1, col2, col3, col4 = st.columns([3, 20, 20, 3])
             col3.info(historical[i]["text"])
-            col4.image("homme.png")
+            col4.image("img/homme.png")

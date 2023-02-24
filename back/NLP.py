@@ -15,7 +15,7 @@ stop_words = set(stopwords.words('french'))
 
 def departement_depute(topic):
     value = ""
-    with open('depute.json') as json_file:
+    with open('data/depute.json') as json_file:
         data = json.load(json_file)
 
     if topic['département'] in data['departement']:
@@ -36,7 +36,7 @@ def departement_depute(topic):
 
 def nom_depute(topic):
     value = ""
-    with open('depute.json') as json_file:
+    with open('data/depute.json') as json_file:
         data = json.load(json_file)
 
     index = [i for i, x in enumerate(data['nom']) if x == topic['nom_député']]
@@ -111,7 +111,7 @@ def cleaning(text):
 def find_topic(text):
 
     dic_find = {}
-    with open('topic.json') as json_file:
+    with open('data/topic.json') as json_file:
         dict_topic = json.load(json_file)
 
     for i in text:
@@ -120,11 +120,6 @@ def find_topic(text):
                 dic_find[key] = i
 
     return dic_find
-
-
-
-
-
 
 def answer(text,answer):
     newString = cleaning(text)
