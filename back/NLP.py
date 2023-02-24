@@ -67,18 +67,25 @@ def good_scrapingg(topic):
     value = random.choice(reponse)
     if 'sénat' in topic:
         print('sénat')
+
     elif ('département' in topic) and ('député' in topic):
         value = departement_depute(topic)
+
     elif  ("agenda" in topic) and ("assemblée" in topic):
         value = agenda_assemblee(topic)
+
     elif 'nom_député' in topic:
         value = nom_depute(topic)
+
     elif 'région' in topic:
         st.write('région')
+
     elif 'temps' in topic:
         st.write('temps')
+
     elif 'assemblée' in topic:
         print('assemblée')
+
     elif 'député' in topic:
         print('député')
 
