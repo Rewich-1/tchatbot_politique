@@ -62,7 +62,69 @@ def agenda_assemblee(topic):
 
     return value
 
-def good_scrapingg(topic):
+def dossier_assemblee(topic):
+    url = "https://www.nosdeputes.fr/dossiers/date"
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, "html.parser")
+
+    table = soup.find('div', class_='travaux_parlementaires')
+    lis = table.find('li')
+    date = table.find('h3')
+    print(date.text)
+    liss = lis.find_all('li')
+
+    list_dossiers = []
+
+    for i in liss:
+        dossier = {}
+        oui = i.find('a')
+        dossier["date"] = date.text
+        dossier["link"] = oui['href']
+        dossier["text"] = oui.text
+        list_dossiers.append(dossier)
+
+    value = "voici la liste des dossiers de ce mois-ci : \n\n"
+    for i in list_dossiers:
+        value += i['text'] + " \n\n"
+
+    return value
+
+def dossier_assemblee_select(topic,text):
+    target = re.findall(r'"(.*?)"', text)
+    target = target[0]
+
+    url = "https://www.nosdeputes.fr/dossiers/date"
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, "html.parser")
+
+    table = soup.find('div', class_='travaux_parlementaires')
+    lis = table.find('li')
+    date = table.find('h3')
+    print(date.text)
+    liss = lis.find_all('li')
+
+    list_dossiers = []
+
+    for i in liss:
+        dossier = {}
+        oui = i.find('a')
+        dossier["date"] = date.text
+        dossier["link"] = oui['href']
+        dossier["text"] = oui.text
+        list_dossiers.append(dossier)
+
+    value = "voici la liste des dossiers de ce mois-ci :"
+    for i in list_dossiers:
+        if i["text"] == target:
+            value = i["link"]
+            break
+
+    value = "https://www.nosdeputes.fr/" + value
+
+    return value
+
+
+def good_scrapingg(topic,text):
     reponse = ['je ne comprend pas', 'non mais ça ne veux rien dire','tu te moque de moi ?','parle moi en français',]
     value = random.choice(reponse)
     if 'sénat' in topic:
@@ -73,6 +135,13 @@ def good_scrapingg(topic):
 
     elif  ("agenda" in topic) and ("assemblée" in topic):
         value = agenda_assemblee(topic)
+
+    elif ("dossier" in topic) and '"' in text :
+        value = dossier_assemblee_select(topic,text)
+
+
+    elif  ("dossier" in topic) and ("assemblée" in topic):
+        value = dossier_assemblee(topic)
 
     elif 'nom_député' in topic:
         value = nom_depute(topic)
@@ -131,7 +200,7 @@ def find_topic(text):
 def answer(text,answer):
     newString = cleaning(text)
     topic = find_topic(newString)
-    good_scraping = good_scrapingg(topic)
+    good_scraping = good_scrapingg(topic,text)
 
     if answer:
         return  str(good_scraping)

@@ -52,21 +52,21 @@ with tab1:
     else:
         pass
 
-    if question != "":
-
+    if question != None or question != "":
+        st.header(question)
         historical.append({"user":1,"text":question})
         historical.append({"user": 0, "text": answer(question,answer=True)})
 
-        historical.reverse()
+    historical.reverse()
 
-        with container:
-            tchat(historical)
+    with container:
+        tchat(historical)
 
-        st.write(answer(question,answer=False))
-        historical.reverse()
+    st.write(answer(question,answer=False))
+    historical.reverse()
 
-        cookies['historical'] = str(historical).replace("'", '"')
-        cookies.save()
+    cookies['historical'] = str(historical).replace("'", '"')
+    cookies.save()
 
 
 with tab2:
