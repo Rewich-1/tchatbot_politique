@@ -13,7 +13,23 @@ from bs4 import BeautifulSoup
 import requests
 stop_words = set(stopwords.words('french'))
 
+
 def departement_depute(topic):
+    """
+    Présente les différents députés d'une région
+
+    Parameters:
+    ----------
+    topic : dictionnaire
+        Contient le département dont on veut les députés
+        clées : 
+            - 'département' : string
+
+    Returns:
+    -------
+    string
+        Une réponse formaté avec les députés du département
+    """
     value = ""
     with open('data/depute.json') as json_file:
         data = json.load(json_file)
@@ -35,34 +51,76 @@ def departement_depute(topic):
 
 
 def nom_depute(topic):
+    """
+    Donne le lien de la page d'un député
+
+    Parameters:
+    ----------
+    topic : dictionnaire
+        Contient le nom du député dont on veut la page
+        clées : 
+            - 'nom_député' : string
+
+    Returns:
+    -------
+    string
+        Une réponse formaté avec le lien de la page du député
+    """
     value = ""
     with open('data/depute.json') as json_file:
         data = json.load(json_file)
 
     index = [i for i, x in enumerate(data['nom']) if x == topic['nom_député']]
     lien = data['adresse'][index[0]]
-    value = " voici le lien de la page de " + str(topic['nom_député']) + " : " + lien
+    value = "Voici le lien de la page de " + str(topic['nom_député']) + " : " + lien
 
     return value
 
 def agenda_assemblee(topic):
+    """
+    Donne l'agenda de l'assemblée nationale pour une date donnée
+
+    Parameters:
+    ----------
+    topic : dictionnaire
+        Contient la date de l'agenda
+        clées : 
+            - 'temps' : string
+
+    Returns:
+    -------
+    string
+        Une réponse formaté avec le lien de l'agenda pour la journée concernée
+    """
     value = ""
     if topic['temps'] != "":
         if topic['temps'] == "aujourhui":
             url = 'https://www2.assemblee-nationale.fr/agendas/les-agendas/'
-            value = " voici le lien de la page de " + url
+            value = "Voici le lien de la page de l'agenda pour aujourd'hui : " + url
         elif topic['temps'] == "demain":
             today = dt.date.today()
             tomorrow = today + dt.timedelta(days=1)
             url = 'https://www2.assemblee-nationale.fr/agendas/les-agendas/' + str(tomorrow)
-            value = " voici le lien de la page de " + url
+            value = "Voici le lien de la page de l'agenda pour demain : " + url
     else:
         url = 'https://www2.assemblee-nationale.fr/agendas/les-agendas/'
-        value = " voici le lien de la page de " + url
+        value = "Voici le lien de la page de l'agenda pour aujourd'hui " + url
 
     return value
 
 def dossier_assemblee(topic):
+    """
+    Donne la liste des dossier discuté à l'assemblée nationale pour le mois en cours
+
+    Parameters:
+    ----------
+    topic : ?
+
+    Returns:
+    -------
+    string
+        Une réponse formaté avec la liste des dossier
+    """
     url = "https://www.nosdeputes.fr/dossiers/date"
     page = requests.get(url)
     soup = BeautifulSoup(page.content, "html.parser")
@@ -83,13 +141,13 @@ def dossier_assemblee(topic):
         dossier["text"] = oui.text
         list_dossiers.append(dossier)
 
-    value = "voici la liste des dossiers de ce mois-ci : \n\n"
+    value = "Voici la liste des dossiers de ce mois-ci : \n"
     for i in list_dossiers:
-        value += i['text'] + " \n\n"
+        value += " - " + i['text'] + "\n"
 
     return value
 
-def dossier_assemblee_select(topic,text):
+def dossier_assemblee_select(topic, text):
     target = re.findall(r'"(.*?)"', text)
     target = target[0]
 
@@ -124,8 +182,8 @@ def dossier_assemblee_select(topic,text):
     return value
 
 
-def good_scrapingg(topic,text):
-    reponse = ['je ne comprend pas', 'non mais ça ne veux rien dire','tu te moque de moi ?','parle moi en français',]
+def good_scrapingg(topic, text):
+    reponse = ['Je n\'ai pas compris votre demande', 'Pouvez vous reformuler votre question ?']
     value = random.choice(reponse)
     if 'sénat' in topic:
         print('sénat')
@@ -137,8 +195,7 @@ def good_scrapingg(topic,text):
         value = agenda_assemblee(topic)
 
     elif ("dossier" in topic) and '"' in text :
-        value = dossier_assemblee_select(topic,text)
-
+        value = dossier_assemblee_select(topic, text)
 
     elif  ("dossier" in topic) and ("assemblée" in topic):
         value = dossier_assemblee(topic)
@@ -197,10 +254,23 @@ def find_topic(text):
 
     return dic_find
 
-def answer(text,answer):
+def answer(text, answer):
+    """
+    Entrée de l'algorithme de réponse
+
+    Parameters:
+    ----------
+    text : string
+        Demande de l'utilisateur
+
+    Returns:
+    -------
+    string
+        Une réponse formaté avec la liste des dossier
+    """
     newString = cleaning(text)
     topic = find_topic(newString)
-    good_scraping = good_scrapingg(topic,text)
+    good_scraping = good_scrapingg(topic, text)
 
     if answer:
         return  str(good_scraping)

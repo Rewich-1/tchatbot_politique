@@ -32,19 +32,19 @@ except:
 
 
 
-st.title('tchatbot')
+st.title('TchatBot Politique')
 
-tab1, tab2 = st.tabs(["tchat", "tuto"])
+tab1, tab2 = st.tabs(["tchating", "documentation"])
 
 with tab1:
-    st.header('tchat')
+    st.header('Tchat')
 
     st.write('<style>[data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] {max-height: 600px;overflow: auto;flex-direction:column-reverse;} </style>', unsafe_allow_html=True)
     container = st.container()
 
-    question = st.text_input(value="",label="Speak")
+    question = st.text_input(value="",label=" ")
 
-    if st.button('manger les cookies 🍪' ):
+    if st.button('Réinitialiser la conversation 🍪' ):
         question = ""
         cookies['historical'] = "[]"
         cookies.save()
@@ -70,6 +70,6 @@ with tab1:
 
 
 with tab2:
-    st.header('documentation')
+    st.header('Documentation')
     recherche = st.text_input(value="", label="recherche")
     documentation()
