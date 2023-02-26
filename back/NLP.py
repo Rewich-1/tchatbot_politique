@@ -8,11 +8,113 @@ from nltk.corpus import stopwords
 import json
 import random
 import datetime as dt
-
-from bs4 import BeautifulSoup
 import requests
-stop_words = set(stopwords.words('french'))
+import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
+from string import punctuation
 
+#---- Fonctions utilitaires ----#
+def summarize(text, n):
+    stop_words = set(stopwords.words('french'))
+    stemmer = nltk.stem.PorterStemmer()
+    sentences = sent_tokenize(text)
+    words = [word_tokenize(sentence.lower()) for sentence in sentences]
+    filtered_words = [[stemmer.stem(word) for word in words if word not in stop_words and word not in punctuation] for words in words]
+
+    word_freq = {}
+    for sentence in filtered_words:
+        for word in sentence:
+            if word in word_freq:
+                word_freq[word] += 1
+            else:
+                word_freq[word] = 1
+
+    sentence_scores = {}
+    for i, sentence in enumerate(filtered_words):
+        score = 0
+        for word in sentence:
+            score += word_freq[word]
+        sentence_scores[i] = score
+
+    summary_sentences = []
+    sorted_scores = sorted(sentence_scores.items(), key=lambda x: x[1], reverse=True)
+    for i in range(n):  # Change the number to control the length of the summary
+        summary_sentences.append(sentences[sorted_scores[i][0]])
+    summary = ' '.join(summary_sentences)
+
+    return summary
+
+#---- Fonctions réponses ----#
+def resume_parti_debat(url, ):
+    """
+    Récupère le résumé des débats de l'assemblée nationale par parti
+
+    Parameters:
+    ----------
+
+    Returns:
+    -------
+    string
+        Une réponse formaté avec le résumé des débats de l'assemblée nationale
+    """
+
+    URL_du_dossier = url
+    page_dossier = requests.get(URL_du_dossier)
+
+    soup = BeautifulSoup(page_dossier.content, "html.parser")
+
+    sceances = soup.find("div", class_="seances_dossier").find_all("a")
+
+    dataframe = []
+
+    for sceance in sceances:
+        URL_sceance = sceance.get("href")
+        URL_sceance = "https://www.nosdeputes.fr"+URL_sceance
+        page_sceance = requests.get(URL_sceance)
+
+        soup = BeautifulSoup(page_sceance.content, "html.parser")
+
+        #We get every intervention done in the sceance
+        interventions = soup.find_all("div", class_="intervention")
+        folder_name = ""
+
+        #We filter the first lines of off topic discussions
+        for i in range(0, len(interventions)):
+            inter = interventions[i]
+            if inter.find("div", id="table_1582"):
+                folder_name = inter.find("h2", {'class': 'section'}).text
+                interventions = interventions[i:]
+                break
+        
+        #And the last lines of off topic discussions
+        for i in range(0, len(interventions)):
+            inter = interventions[i]
+            if not inter.find("div", {'class': 'intervenant'}):
+                if inter.find("h2", {'class': 'section'}).text != folder_name:
+                    interventions = interventions[:i]
+                    break
+        
+        #Now based on what remains we build our dataframe of interventions
+        for inter in interventions:
+            intervenant = inter.find("div", {'class': 'intervenant'})
+            #We filter the interventions that are not from a person
+            if intervenant and not intervenant.find("div", {'class': 'didascalie'}) \
+            and intervenant.find('img', {'class': 'jstitle'}):
+                text = intervenant.find('img', {'class': 'jstitle'})['title']
+                name, group = text.split(' -- ')[0], text.split(' -- ')[1]
+                group = group.strip('()')
+                group_name, group_parlementaire = group.split(':')
+                dataframe.append({
+                    "intervenant" : name,
+                    "parti" : group_parlementaire.strip(),
+                    "intervention" : intervenant.find("div", {'class': 'texte_intervention'}).text
+                })
+
+    df = pd.DataFrame(dataframe)
+    concat = df.groupby('parti')['intervention'].apply(lambda x: ' '.join(x))
+    
+    return "Voici un résumé de ce que les députés de chaque parti ont dit lors de ce débat : \n\n" + concat.apply(summarize, n=3).to_string()
 
 def departement_depute(topic):
     """
@@ -182,6 +284,7 @@ def dossier_assemblee_select(topic, text):
     return value
 
 
+#---- Fonctions Traitement ----#
 def good_scrapingg(topic, text):
     reponse = ['Je n\'ai pas compris votre demande', 'Pouvez vous reformuler votre question ?']
     value = random.choice(reponse)
