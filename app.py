@@ -23,10 +23,10 @@ if not cookies.ready():
 
 try :
     historical = json.loads(cookies['historical'])
-    st.write('cookies Find !')
+    #st.write('cookies Find !')
     #st.title(historical)
 except:
-    st.write('cookies NOT find !')
+    #st.write('cookies NOT find !')
     #cookies['historical'] = "[]"
     historical = []
 
@@ -53,7 +53,7 @@ with tab1:
         pass
 
     if question != None or question != "":
-        st.header(question)
+        #st.header(question)
         historical.append({"user":1,"text":question})
         historical.append({"user": 0, "text": answer(question,answer=True)})
 
@@ -62,7 +62,7 @@ with tab1:
     with container:
         tchat(historical)
 
-    st.write(answer(question,answer=False))
+    #st.write(answer(question,answer=False))
     historical.reverse()
 
     cookies['historical'] = str(historical).replace("'", '"')

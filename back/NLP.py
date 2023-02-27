@@ -13,9 +13,30 @@ import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 from string import punctuation
+stop_words = set(stopwords.words('french'))
 
 #---- Fonctions utilitaires ----#
 def summarize(text, n):
+    """
+    Résume un texte en n phrases
+
+    Parameters:
+    ----------
+    text : string
+        Le texte à résumer
+    n : int
+        Le nombre de phrases du résumé
+    Returns:
+    -------
+    string
+        Le résumé du texte
+    """
+    text = text.replace("\n", " ").replace("\r", "").replace("\xa0", " ")
+    text = re.sub(r'\.(?! )', '. ', text)
+    text = re.sub(r'\!(?! )', '! ', text)
+    text = re.sub(r'\?(?! )', '? ', text)
+    text = re.sub(r'\s+', ' ', text)
+
     stop_words = set(stopwords.words('french'))
     stemmer = nltk.stem.PorterStemmer()
     sentences = sent_tokenize(text)
@@ -45,20 +66,19 @@ def summarize(text, n):
 
     return summary
 
-#---- Fonctions réponses ----#
-def resume_parti_debat(url, ):
+def get_debat_dossier(url):
     """
-    Récupère le résumé des débats de l'assemblée nationale par parti
+    Récupère par scrapping tous les débats sur le dossier dont l'url est donné
 
     Parameters:
     ----------
-
+    url : string
+        Lien du dossier
     Returns:
     -------
-    string
-        Une réponse formaté avec le résumé des débats de l'assemblée nationale
+    dataframe
+        Les échanges des députés sur le dossier
     """
-
     URL_du_dossier = url
     page_dossier = requests.get(URL_du_dossier)
 
@@ -112,9 +132,69 @@ def resume_parti_debat(url, ):
                 })
 
     df = pd.DataFrame(dataframe)
+    df["parti"] = df["parti"].apply(lambda x: x.replace('app. ', ''))
+    df["intervenant"] = df["intervenant"].apply(lambda x: x.split(' ')[-1].lower())
+    return df
+
+#---- Fonctions réponses ----#
+def resume_parti_debat_depute(url, topic):
+    """
+    Génère le résumé des débats de l'assemblée nationale d'un delegue
+
+    Parameters:
+    ----------
+
+    Returns:
+    -------
+    string
+        Une réponse formatée avec le résumé de l'opinion d'un député sur un dossier
+    """
+    print(topic)
+    df = get_debat_dossier(url)
+    concat = df.groupby('intervenant')['intervention'].apply(lambda x: ' '.join(x))
+
+    answer = "Voici un résumé de ce que "+ topic['nom_député'] +" a dit lors de ce débat : \n\n" + summarize(concat[topic['nom_député']], n=5)
+    return answer
+
+def resume_parti_debat(url):
+    """
+    Génère le résumé des débats de l'assemblée nationale par parti
+
+    Parameters:
+    ----------
+
+    Returns:
+    -------
+    string
+        Une réponse formaté avec le résumé des débats de l'assemblée nationale
+    """
+
+    df = get_debat_dossier(url)
+    concat = df.groupby('parti')['intervention'].apply(lambda x: ' '.join(x))
+
+    answer = "Voici un résumé de ce que les députés de chaque parti ont dit lors de ce débat : \n\n"
+    for key, value in concat.apply(summarize, n=1).items():
+        answer = answer + "Parti " + key + "\n    " + value + "\n"
+    
+    return answer
+
+def resume_parti_debat_parti(url, topic):
+    """
+    Génère le résumé des débats de l'assemblée nationale pour un parti
+
+    Parameters:
+    ----------
+
+    Returns:
+    -------
+    string
+        Une réponse formaté avec le résumé des débats de l'assemblée nationale pour un parti
+    """
+
+    df = get_debat_dossier(url)
     concat = df.groupby('parti')['intervention'].apply(lambda x: ' '.join(x))
     
-    return "Voici un résumé de ce que les députés de chaque parti ont dit lors de ce débat : \n\n" + concat.apply(summarize, n=3).to_string()
+    return "Voici un résumé de ce que les députés du parti '" + topic['parti_politique'].upper() + "' ont dit lors de ce débat : \n\n" + summarize(concat[topic['parti_politique'].upper()], n=3)
 
 def departement_depute(topic):
     """
@@ -138,16 +218,11 @@ def departement_depute(topic):
 
     if topic['département'] in data['departement']:
         index = [i for i, x in enumerate(data['departement']) if x == topic['département']]
-        # index = data['departement'].index(topic['département'])
-        value = " les député de " + str(topic['département'])
-        if len(index) > 1:
-            value += " sont "
-        else:
-            value += " est "
+        value = " les député de " + str(topic['département']) + " sont/est : "
         for i in range(len(index)):
-            value += str(data['prenom'][index[i]]) + " " + str(data['nom'][index[i]]) + " "
-            if i < len(index) - 1:
-                value += " et "
+            prenom = str(data['prenom'][index[i]])
+            nom = str(data['nom'][index[i]])
+            value += " - " + prenom.capitalize() + " " + nom.upper() + "\n "
 
     return value
 
@@ -174,9 +249,13 @@ def nom_depute(topic):
 
     index = [i for i, x in enumerate(data['nom']) if x == topic['nom_député']]
     lien = data['adresse'][index[0]]
-    value = "Voici le lien de la page de " + str(topic['nom_député']) + " : " + lien
 
-    return value
+    page = requests.get(lien)
+    soup = BeautifulSoup(page.content, "html.parser")
+
+    return soup.find("h1", class_="h1 _mt-small").text + " est un député du parti **" + soup.find("a", class_="h4 _colored link").text.strip() + \
+    "**.\n\n Il représente : "+ soup.find("div", class_="_mb-small _centered-text").find("span").text + \
+    ".\n\n Voici sa biographie : " + soup.find("div", class_="_gutter-xxs _vertical").find("p").text
 
 def agenda_assemblee(topic):
     """
@@ -297,9 +376,21 @@ def good_scrapingg(topic, text):
     elif  ("agenda" in topic) and ("assemblée" in topic):
         value = agenda_assemblee(topic)
 
+    elif ("dossier" in topic) and '"' in text and "résumé" in topic and ('nom_député' in topic):
+        value = dossier_assemblee_select(topic, text)
+        value = resume_parti_debat_depute(value, topic)
+    
+    elif ("dossier" in topic) and '"' in text and "résumé" in topic and "parti_politique" in topic:
+        value = dossier_assemblee_select(topic, text)
+        value = resume_parti_debat_parti(value, topic)
+    
+    elif ("dossier" in topic) and '"' in text and "résumé" in topic:
+        value = dossier_assemblee_select(topic, text)
+        value = resume_parti_debat(value)
+    
     elif ("dossier" in topic) and '"' in text :
         value = dossier_assemblee_select(topic, text)
-
+    
     elif  ("dossier" in topic) and ("assemblée" in topic):
         value = dossier_assemblee(topic)
 
