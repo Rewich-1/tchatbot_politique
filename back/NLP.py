@@ -218,7 +218,7 @@ def departement_depute(topic):
 
     if topic['département'] in data['departement']:
         index = [i for i, x in enumerate(data['departement']) if x == topic['département']]
-        value = " les député de " + str(topic['département']) + " sont/est : "
+        value = " les député de " + str(topic['département']) + " sont/est :\n "
         for i in range(len(index)):
             prenom = str(data['prenom'][index[i]])
             nom = str(data['nom'][index[i]])
