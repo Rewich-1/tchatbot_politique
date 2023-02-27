@@ -5,7 +5,7 @@ import pandas as pd
 
 def documentation():
     with st.expander("Information sur les personnes politiques"):
-        st.subheader("Le parcours d'une personne politique")
+        st.subheader("Les députés d'un département/circonscription")
         st.write('Example de prompt : Qui sont les députés de paris ?')
 
         st.subheader("Plus d'information sur une personne politique")

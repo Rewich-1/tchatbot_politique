@@ -174,7 +174,7 @@ def resume_parti_debat(url):
 
     answer = "Voici un résumé de ce que les députés de chaque parti ont dit lors de ce débat : \n\n"
     for key, value in concat.apply(summarize, n=1).items():
-        answer = answer + "Parti " + key + "\n    " + value + "\n"
+        answer = answer + "- Parti " + key + "\n\n    " + value + "\n\n"
     
     return answer
 
